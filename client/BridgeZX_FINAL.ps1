@@ -1,6 +1,6 @@
 ﻿# ========================================================
 # BRIDGEZX - VERSION FINAL COMPILADA
-# Generado: 12/23/2025 21:13:59
+# Generado: 12/23/2025 23:11:17
 # ========================================================
 
 # 0. CORRECCION DE ENTORNO (CRITICO)
@@ -729,10 +729,13 @@ function Finish-Send($timeout, $cancel=$false) {
 # ==========================================
 function Show-AboutBox {
     $ab = New-Object System.Windows.Forms.Form; $ab.Text="About BridgeZX"; if($global:AppIcon){$ab.Icon=$global:AppIcon}
-    $ab.Size=New-Object System.Drawing.Size(420, 270); $ab.StartPosition="CenterParent"; $ab.FormBorderStyle="FixedDialog"; $ab.MaximizeBox=$false; $ab.MinimizeBox=$false; $ab.BackColor=[System.Drawing.Color]::WhiteSmoke
+    # Aumentamos la altura a 350 para dar mÃ¡s espacio vertical
+    $ab.Size=New-Object System.Drawing.Size(420, 350); $ab.StartPosition="CenterParent"; $ab.FormBorderStyle="FixedDialog"; $ab.MaximizeBox=$false; $ab.MinimizeBox=$false; $ab.BackColor=[System.Drawing.Color]::WhiteSmoke
+    
     $abHeader = New-Object System.Windows.Forms.Panel; $abHeader.Height=65; $abHeader.Dock=[System.Windows.Forms.DockStyle]::Top; $abHeader.BackColor=[System.Drawing.Color]::Black
     $pbAbLogo = New-Object System.Windows.Forms.PictureBox; $pbAbLogo.Location=New-Object System.Drawing.Point(0,0); $pbAbLogo.Size=New-Object System.Drawing.Size(200,65); $pbAbLogo.SizeMode=[System.Windows.Forms.PictureBoxSizeMode]::Zoom; $pbAbLogo.BackColor=[System.Drawing.Color]::Transparent
     if($global:LogoImage){$pbAbLogo.Image=$global:LogoImage}; $abHeader.Controls.Add($pbAbLogo)
+    
     $abHeader.Add_Paint({
         $g=$_.Graphics; $g.SmoothingMode=[System.Drawing.Drawing2D.SmoothingMode]::AntiAlias; $wPanel=$abHeader.Width; $hPanel=$abHeader.Height
         if (-not $global:LogoImage) { $f=New-Object System.Drawing.Font("Segoe UI",24,[System.Drawing.FontStyle]::Bold); $g.DrawString("BridgeZX",$f,[System.Drawing.Brushes]::White,15,10); $f.Dispose() }
@@ -745,9 +748,29 @@ function Show-AboutBox {
         }
     })
     $ab.Controls.Add($abHeader)
+
+    # 1. DescripciÃ³n Principal (Y=80)
     $lblDesc=New-Object System.Windows.Forms.Label; $lblDesc.Text="Universal Queue Loader for ZX Spectrum`nusing ESP-12 via AY-3-8912"; $lblDesc.AutoSize=$true; $lblDesc.Font=New-Object System.Drawing.Font("Segoe UI",9); $lblDesc.Location=New-Object System.Drawing.Point(20,80); $ab.Controls.Add($lblDesc)
-    $lblMe=New-Object System.Windows.Forms.Label; $lblMe.Text="(c) 2025 M. Ignacio Monge GarcÃ­a"; $lblMe.AutoSize=$true; $lblMe.Font=New-Object System.Drawing.Font("Segoe UI",9); $lblMe.Location=New-Object System.Drawing.Point(20,165); $ab.Controls.Add($lblMe)
-    $btnClose=New-Object System.Windows.Forms.Button; $btnClose.Text="Close"; $btnClose.Size=New-Object System.Drawing.Size(80,28); $btnClose.Location=New-Object System.Drawing.Point(310,195); Apply-ButtonStyle $btnClose ([System.Drawing.Color]::Gray); $btnClose.Add_Click({$ab.Close()}); $ab.Controls.Add($btnClose)
+
+    # 2. CrÃ©ditos Alex Nihirash (Bajado a Y=130 para separar de la descripciÃ³n)
+    $lblBased=New-Object System.Windows.Forms.Label; $lblBased.Text="Based on code from LAIN by Alex Nihirash"; $lblBased.AutoSize=$true; $lblBased.Font=New-Object System.Drawing.Font("Segoe UI",9); $lblBased.Location=New-Object System.Drawing.Point(20,130); $ab.Controls.Add($lblBased)
+    
+    # Enlace LAIN (Bajado a Y=150, 20px debajo del texto)
+    $lnkLain=New-Object System.Windows.Forms.LinkLabel; $lnkLain.Text="https://github.com/nihirash/Lain"; $lnkLain.AutoSize=$true; $lnkLain.Location=New-Object System.Drawing.Point(20,150); 
+    $lnkLain.LinkBehavior=[System.Windows.Forms.LinkBehavior]::HoverUnderline; 
+    $lnkLain.Add_LinkClicked({ [System.Diagnostics.Process]::Start("https://github.com/nihirash/Lain") }); $ab.Controls.Add($lnkLain)
+
+    # 3. CrÃ©ditos Tuyos (Bajado a Y=185 para separar del bloque anterior)
+    $lblMe=New-Object System.Windows.Forms.Label; $lblMe.Text="(C) 2025 M. Ignacio Monge GarcÃ­a"; $lblMe.AutoSize=$true; $lblMe.Font=New-Object System.Drawing.Font("Segoe UI",9,[System.Drawing.FontStyle]::Bold); $lblMe.Location=New-Object System.Drawing.Point(20,185); $ab.Controls.Add($lblMe)
+    
+    # Enlace BridgeZX (Bajado a Y=205, 20px debajo del texto)
+    $lnkBridge=New-Object System.Windows.Forms.LinkLabel; $lnkBridge.Text="https://github.com/IgnacioMonge/BridgeZX"; $lnkBridge.AutoSize=$true; $lnkBridge.Location=New-Object System.Drawing.Point(20,205); 
+    $lnkBridge.LinkBehavior=[System.Windows.Forms.LinkBehavior]::HoverUnderline; 
+    $lnkBridge.Add_LinkClicked({ [System.Diagnostics.Process]::Start("https://github.com/IgnacioMonge/BridgeZX") }); $ab.Controls.Add($lnkBridge)
+
+    # BotÃ³n Cerrar (Bajado a Y=260)
+    $btnClose=New-Object System.Windows.Forms.Button; $btnClose.Text="Close"; $btnClose.Size=New-Object System.Drawing.Size(80,28); $btnClose.Location=New-Object System.Drawing.Point(310,260); Apply-ButtonStyle $btnClose ([System.Drawing.Color]::Gray); $btnClose.Add_Click({$ab.Close()}); $ab.Controls.Add($btnClose)
+    
     $ab.ShowDialog($form)|Out-Null
 }
 
@@ -821,8 +844,6 @@ $form.Controls.AddRange(@($pnlHeader, $grpConn, $grpFile, $pnlActions, $progress
 
 $toolTip=New-Object System.Windows.Forms.ToolTip; $toolTip.SetToolTip($picConn, "Click to test connection")
 $openDlg=New-Object System.Windows.Forms.OpenFileDialog; $openDlg.Filter="All files (*.*)|*.*"; $openDlg.Multiselect=$true
-
-# ==========================================
 # --- FIN DE BridgeZX.UI.ps1 ---
 
 # --- INICIO DE BRIDGEZX.ps1 ---
