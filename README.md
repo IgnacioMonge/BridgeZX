@@ -2,7 +2,7 @@
 
 ![BridgeZX Banner](images/bridgezx_banner.jpg)
 
-> *Spanish version: [READMEsp.md](READMEsp.md)*
+> *Versión en español aquí: [READMEsp.md](READMEsp.md)*
 
 **BridgeZX** is a file transfer tool designed for the ZX Spectrum that bridges the gap between your modern PC and your 8-bit machine. It implements an **asynchronous client-server architecture** to transfer files (TAP, TRD, SCR, Z80, etc.) over Wi-Fi directly to the Spectrum's SD card.
 
