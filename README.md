@@ -1,4 +1,4 @@
-# BridgeZX File Tranfer Tool
+# BridgeZX File Transfer Tool
 
 ![BridgeZX Banner](images/bridgezx_banner.jpg)
 
