@@ -1,0 +1,1 @@
+ .\zmakebas.exe -a 10 -3 -o BRIDGEZX.BAS bridgezx.txt

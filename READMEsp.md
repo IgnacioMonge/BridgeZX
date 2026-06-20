@@ -1,59 +1,81 @@
-
-# Sistema de Transmisión BridgeZX
+# Sistema de Transmision BridgeZX
 
 ![BridgeZX Banner](images/bridgezx_banner.jpg)
 
-> *> *English version here: [README.md](README.md)*
-> 
-**BridgeZX** es una herramienta de transmisión de archivos para ZX Spectrum que tiende un puente entre tu PC moderno y tu Spcetrum ZX. Implementa una **estructura asíncrona cliente-servidor** para enviar archivos (TAP, TRD, SCR, Z80, etc.) por Wi-Fi directamente a la tarjeta SD del Spectrum.
+> English version: [README.md](README.md)
 
-El sistema utiliza un módulo **ESP-12 (ESP8266)** conectado a través del chip de sonido **AY-3-8912** para establecer el enlace inalámbrico, donde el Spectrum actúa como nodo receptor (Servidor) y el PC como emisor (Cliente).
+**BridgeZX** envia archivos desde un PC Windows a la tarjeta SD de un ZX Spectrum por Wi-Fi. El Spectrum ejecuta un pequeno servidor como comando DOT de esxDOS, y el cliente PowerShell del PC envia uno o varios archivos en cola.
 
-## 🚀 Características
+Version actual: **v0.5.2**
 
-* **Transferencia a "Alta Velocidad"**: A ver, seamos sinceros. Funciona a **9600 baudios** a través del chip AY. Es una velocidad absurda comparada con cargar una cinta de casete (adiós a los 5 minutos de espera), ¡pero tampoco esperes fibra óptica! ;)
-* **Arquitectura Asíncrona Cliente-Servidor**: El sistema gestiona la recepción de paquetes, el buffer circular, la escritura en SD y la interfaz de usuario de forma asíncrona para garantizar la estabilidad en la CPU Z80.
-* **Doble Modo de Operación**:
-    * **Comando Punto (`.bridgezx`)**: La forma profesional. Se integra en esxDOS. Solo escribe `.bridgezx` y el servidor quedará a la espera.
-    * **Binario Estándar (`.bin`)**: Para cargar con `LOAD ""` o `RANDOMIZE USR`.
-* **Escritura Directa en SD**: Usa las llamadas al sistema de esxDOS para volcar el flujo de datos a la tarjeta, saltándose las rutinas de la ROM.
-* **Integridad a Prueba de Balas**: Verificación **CRC-16** en cada paquete de archivo.
-* **Interfaz Retro-Futurista**:
-    * Barra de progreso en tiempo real.
-    * **Feedback Visual "Matrix"**: El borde parpadea con ruido binario durante la carga, confirmando visualmente la actividad del puerto UART.
-    * Estados por colores: Azul (Esperando), Verde (Éxito), Rojo (Error).
-* **Seguridad Ante Todo**: Comprobación previa de espacio en SD y límite de seguridad de 2MB por archivo.
-* **Limpieza de Pantalla Inteligente**: Una rutina de vídeo personalizada que borra los listados BASIC antiguos de la memoria para una interfaz limpia.
+## Caracteristicas
 
-## 🛠 Requisitos de Hardware
+- **Servidor divMMC / ZX-Uno UART**: ruta UART hardware ajustada para ESP8266 con firmware AT en el puerto `6144`.
+- **Comando DOT de esxDOS**: copia `brgzx` a `/BIN` y arrancalo con `.brgzx`.
+- **Cola multifichero**: arrastra archivos o carpetas al cliente Windows, reordena la cola y envia el lote en una sola sesion TCP.
+- **Integridad**: cada fichero lleva CRC-16; el cliente solo avanza tras recibir un ACK real del servidor.
+- **Escritura directa en SD**: el servidor Z80 escribe mediante esxDOS, comprueba espacio libre y mantiene un limite de seguridad de 2 MB por fichero.
+- **UI responsiva**: progreso total, ETA, progreso en la barra de tareas, sondeo de conexion, pausa de monitorizacion y sonido al completar.
+- **Flujo seguro ante errores**: timeouts, fallos CRC, directorios protegidos y disco lleno paran la cola en vez de marcar falso exito.
 
-* **ZX Spectrum** (48k, 128k, +2, +3, o clones como ZX-Uno/Next).
-* **Interfaz de Almacenamiento**: DivMMC, DivIDE, o similar con **esxDOS**.
-* **Interfaz Wi-Fi**: Módulo **ESP-12 (ESP8266)** conectado vía UART al chip **AY-3-8912** (el estándar en la mayoría de interfaces modernas).
+## Requisitos de hardware
 
-## 📦 Instalación y Uso
+- ZX Spectrum 48K/128K/+2/+3 o clon compatible.
+- DivMMC/DivIDE o similar con esxDOS.
+- Modulo Wi-Fi ESP8266/ESP-12 accesible por la ruta UART ZX-Uno/divMMC usada por BridgeZX.
 
-### 1. Como Comando de Sistema (Recomendado)
-1.  Copia el archivo `bridgezx` (sin extensión) a la carpeta `/BIN` de la SD.
-2.  Arranca el Spectrum.
-3.  Escribe esto en BASIC:
-    ```basic
-    .bridgezx
-    ```
-4.  El Spectrum escuchará en el **Puerto 6144**. Usa el Cliente de PC para enviar archivos.
+## Instalacion
 
-### 2. Como Programa Normal
-1.  Copia `bridgezx.bin` y `BRIDGEZX.BAS` a la SD.
-2.  Carga como en los viejos tiempos:
-    ```basic
-    LOAD "BRIDGEZX.BAS"
-    ```
+### Servidor Spectrum
 
-## ⚙️ Compilación
+1. Compila o descarga el asset `brgzx` de la release.
+2. Copia `brgzx` a `/BIN` en la SD del Spectrum.
+3. Arrancalo desde BASIC:
 
-Escrito en Ensamblador Z80. Necesitas **SjASMPlus** (v1.21.0 o superior).
+```basic
+.brgzx
+```
 
-### Compilar el Comando Punto (`.bridgezx`)
-Usamos el flag `-DDOT` para mover el código a la dirección `$2000` (espacio reservado de esxDOS).
+El servidor escucha en el puerto TCP `6144`.
+
+### Cliente Windows
+
+Usa `client/BridgeZX_FINAL.ps1` de la release, o generarlo localmente:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\client\build.ps1
+powershell -ExecutionPolicy Bypass -File .\client\BridgeZX_FINAL.ps1
+```
+
+## Compilacion
+
+Servidor: requiere `sjasmplus` y `make`.
+
 ```bash
-sjasmplus -DDOT dot.asm
+cd server
+make all
+```
+
+Salidas:
+
+- `server/build/brgzx` - comando DOT esxDOS
+- `server/build/brgzx.bin` - binario crudo
+
+Bundle del cliente:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\client\build.ps1
+```
+
+## Assets de release
+
+Una release normal incluye:
+
+- `brgzx`
+- `brgzx.bin`
+- `BridgeZX_FINAL.ps1`
+- opcionalmente `BridgeZX.exe` si se compila con ps2exe
+
+## Notas
+
+BridgeZX esta ajustado para hardware real. Si una configuracion ESP/UART nueva falla, valida senal Wi-Fi, firmware AT del ESP, puerto TCP `6144` y salud de escritura de la SD antes de cambiar el pacing.

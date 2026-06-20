@@ -1,8 +1,42 @@
 # 3. UTILIDADES
 # ==========================================
-function Is-NonEmpty([string]$s) { return -not [string]::IsNullOrWhiteSpace($s) }
+if (-not ([System.Management.Automation.PSTypeName]'BridgeZX.Crc16Ccitt').Type) {
+    Add-Type -TypeDefinition @"
+using System;
+using System.IO;
+
+namespace BridgeZX {
+    public static class Crc16Ccitt {
+        public static ushort ComputeFile(string path) {
+            ushort crc = 0xFFFF;
+            byte[] buffer = new byte[65536];
+
+            using (FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+                int read;
+                while ((read = fs.Read(buffer, 0, buffer.Length)) > 0) {
+                    for (int i = 0; i < read; i++) {
+                        crc = (ushort)(crc ^ (buffer[i] << 8));
+                        for (int bit = 0; bit < 8; bit++) {
+                            crc = ((crc & 0x8000) != 0)
+                                ? (ushort)((crc << 1) ^ 0x1021)
+                                : (ushort)(crc << 1);
+                        }
+                    }
+                }
+            }
+
+            return crc;
+        }
+    }
+}
+"@
+}
+
+$script:Crc16Cache = @{}
+
+function Test-NonEmpty([string]$s) { return -not [string]::IsNullOrWhiteSpace($s) }
 function Test-Ip([string]$ip) { [System.Net.IPAddress]$addr=$null; return [System.Net.IPAddress]::TryParse($ip, [ref]$addr) }
-function Safe-TestPath([string]$path) { if (-not (Is-NonEmpty $path)) { return $false }; return (Test-Path -LiteralPath $path) }
+function Safe-TestPath([string]$path) { if (-not (Test-NonEmpty $path)) { return $false }; return (Test-Path -LiteralPath $path) }
 function Safe-FileLength([string]$path) { if (-not (Safe-TestPath $path)) { return $null }; try { return (Get-Item -LiteralPath $path).Length } catch { return $null } }
 
 # --- Normalizador 8.3 con soporte para sufijo de colisión ---
@@ -63,21 +97,14 @@ function Resolve-FilenameCollisions([array]$paths) {
 }
 
 function Get-Crc16Ccitt([string]$path) {
-    $fs = $null
-    try {
-        $fs = [System.IO.File]::Open($path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::Read)
-        $crc = 0xFFFF; $buf = New-Object byte[] 8192
-        while (($read = $fs.Read($buf, 0, $buf.Length)) -gt 0) {
-            for ($i = 0; $i -lt $read; $i++) {
-                $crc = $crc -bxor (([int]$buf[$i]) -shl 8)
-                for ($bit = 0; $bit -lt 8; $bit++) {
-                    if (($crc -band 0x8000) -ne 0) { $crc = ($crc -shl 1) -bxor 0x1021 } else { $crc = ($crc -shl 1) }
-                    $crc = $crc -band 0xFFFF
-                }
-            }
-        }
-        return [UInt16]$crc
-    } finally { if ($fs) { $fs.Close(); $fs.Dispose() } }
+    $fi = [System.IO.FileInfo]::new($path)
+    $key = "{0}|{1}|{2}" -f $fi.FullName, $fi.Length, $fi.LastWriteTimeUtc.Ticks
+    if ($script:Crc16Cache.ContainsKey($key)) { return [UInt16]$script:Crc16Cache[$key] }
+
+    $crc = [BridgeZX.Crc16Ccitt]::ComputeFile($fi.FullName)
+    if ($script:Crc16Cache.Count -ge 128) { $script:Crc16Cache.Clear() }
+    $script:Crc16Cache[$key] = $crc
+    return [UInt16]$crc
 }
 
 # ==========================================

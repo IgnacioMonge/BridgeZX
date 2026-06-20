@@ -1,10 +1,10 @@
-# buidl.ps1 - Script de compilación corregido para PS2EXE
+# build.ps1 - Script de compilacion BridgeZX v0.5.2
 $Directorio = $PSScriptRoot
 $Salida = Join-Path $Directorio "BridgeZX_FINAL.ps1"
 
 Write-Host "Generando archivo maestro..." -ForegroundColor Cyan
 
-# --- PASO 1: Preparar Recursos (Imágenes a Base64) ---
+# --- PASO 1: Preparar Recursos (Imagenes a Base64) ---
 $RutaIcono = Join-Path $Directorio "bridgezx.ico"
 $RutaLogo  = Join-Path $Directorio "bridgezx_logo.png"
 
@@ -28,40 +28,41 @@ if (Test-Path $RutaLogo) {
 # --- PASO 2: Construir el Contenido Final ---
 $ContenidoFinal = @()
 $ContenidoFinal += "# ========================================================"
-$ContenidoFinal += "# BRIDGEZX - VERSION FINAL COMPILADA"
+$ContenidoFinal += "# BRIDGEZX v0.5.1 - VERSION FINAL COMPILADA"
 $ContenidoFinal += "# Generado: $(Get-Date)"
 $ContenidoFinal += "# ========================================================"
 $ContenidoFinal += ""
 
 # --- CORRECCIONES DE ENTORNO EXE ---
 $ContenidoFinal += "# 0. CORRECCION DE ENTORNO (CRITICO)"
-# 1. Recuperar PSScriptRoot en modo EXE
 $ContenidoFinal += 'if (-not $PSScriptRoot) { $PSScriptRoot = [System.AppDomain]::CurrentDomain.BaseDirectory.TrimEnd("\") }'
-# 2. Definir ScriptRoot igual que PSScriptRoot para evitar cálculos fallidos
-$ContenidoFinal += '$ScriptRoot = $PSScriptRoot' 
+$ContenidoFinal += '$ScriptRoot = $PSScriptRoot'
 $ContenidoFinal += ""
 
-# --- CARGA DE LIBRERÍAS PREVIA ---
+# --- CARGA DE LIBRERIAS PREVIA ---
 $ContenidoFinal += "# 1. CARGA DE LIBRERIAS"
 $ContenidoFinal += "Add-Type -AssemblyName System.Windows.Forms"
 $ContenidoFinal += "Add-Type -AssemblyName System.Drawing"
 $ContenidoFinal += "Add-Type -AssemblyName System.Net.NetworkInformation"
 $ContenidoFinal += ""
 
-# --- INYECCIÓN DE RECURSOS ---
+# --- INYECCION DE RECURSOS ---
 $ContenidoFinal += "# 2. RECURSOS INCRUSTADOS"
 $ContenidoFinal += "`$global:B64_ICON = $B64_ICON_STR"
 $ContenidoFinal += "`$global:B64_LOGO = $B64_LOGO_STR"
+$BuildDate = (Get-Date -Format "yyyy-MM-dd HH:mm")
+$ContenidoFinal += "`$global:BUILD_DATE = `"$BuildDate`""
 $ContenidoFinal += ""
 
 # --- PASO 3: Concatenar Archivos ---
+# ORDEN: Config -> Utils -> Files(recursos/cola) -> Network -> UI(controles) -> State(logica) -> Main
 $OrdenArchivos = @(
     "BridgeZX.Config.ps1",
     "BridgeZX.Utils.ps1",
     "BridgeZX.Files.ps1",
     "BridgeZX.Network.ps1",
-    "BridgeZX.State.ps1",
     "BridgeZX.UI.ps1",
+    "BridgeZX.State.ps1",
     "BRIDGEZX.ps1"
 )
 
@@ -69,22 +70,22 @@ foreach ($archivo in $OrdenArchivos) {
     $ruta = Join-Path $Directorio $archivo
     if (Test-Path $ruta) {
         Write-Host "Procesando: $archivo" -ForegroundColor Green
-        
+
         $lineas = Get-Content $ruta
-        
-        # FILTROS DE LIMPIEZA AVANZADOS:
-        $lineasFiltradas = $lineas | Where-Object { 
-            # Quitar carga de scripts externos
-            ($_ -notmatch '^\.\s+.*\$ScriptRoot\\BridgeZX\..*\.ps1') -and 
+
+        # FILTROS DE LIMPIEZA:
+        $lineasFiltradas = $lineas | Where-Object {
+            # Quitar carga de scripts externos (dot-sourcing)
+            ($_ -notmatch '^\.\s+.*\$ScriptRoot\\BridgeZX\..*\.ps1') -and
             # Quitar Add-Type repetidos
             ($_ -notmatch 'Add-Type -AssemblyName') -and
             # Quitar StrictMode intermedio
             ($_ -notmatch 'Set-StrictMode') -and
-            # Quitar intentos de cargar imágenes desde disco
-            ($_ -notmatch '\$RutaIcono\s*=\s*Join-Path') -and 
+            # Quitar intentos de cargar imagenes desde disco
+            ($_ -notmatch '\$RutaIcono\s*=\s*Join-Path') -and
             ($_ -notmatch '\$RutaLogo\s*=\s*Join-Path') -and
-            # ---> NUEVO: Quitar el cálculo de ScriptRoot que falla en el EXE <---
-            ($_ -notmatch '\$ScriptRoot\s*=\s*Split-Path') 
+            # Quitar calculo de ScriptRoot que falla en EXE
+            ($_ -notmatch '\$ScriptRoot\s*=\s*Split-Path')
         }
 
         $ContenidoFinal += "# --- INICIO DE $archivo ---"
@@ -98,4 +99,17 @@ foreach ($archivo in $OrdenArchivos) {
 $ContenidoFinal += "`r`n# Arranque Seguro`r`nif (`$null -eq `$script:form) { Start-BridgeZX }"
 
 $ContenidoFinal | Set-Content $Salida -Encoding UTF8
-Write-Host "¡Hecho! Archivo creado: $Salida" -ForegroundColor Cyan
+
+# --- PASO 4: Validacion sintactica ---
+Write-Host "Validando sintaxis..." -ForegroundColor Yellow
+$errors = $null
+$null = [System.Management.Automation.PSParser]::Tokenize((Get-Content $Salida -Raw), [ref]$errors)
+if ($errors.Count -gt 0) {
+    Write-Host "ADVERTENCIA: Se encontraron $($errors.Count) error(es) de sintaxis:" -ForegroundColor Red
+    foreach ($err in $errors) { Write-Host "  Linea $($err.Token.StartLine): $($err.Message)" -ForegroundColor Red }
+} else {
+    Write-Host "Sintaxis OK" -ForegroundColor Green
+}
+
+Write-Host "Hecho! Archivo creado: $Salida" -ForegroundColor Cyan
+
