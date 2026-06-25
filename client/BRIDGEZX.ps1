@@ -1,5 +1,5 @@
 # ==========================================
-# BRIDGEZX CLIENT v0.5.1
+# BRIDGEZX CLIENT v0.5.3
 # ==========================================
 
 Set-StrictMode -Version Latest

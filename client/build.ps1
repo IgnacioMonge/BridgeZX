@@ -1,4 +1,4 @@
-# build.ps1 - Script de compilacion BridgeZX v0.5.2
+# build.ps1 - Script de compilacion BRIDGEZX v0.5.3
 $Directorio = $PSScriptRoot
 $Salida = Join-Path $Directorio "BridgeZX_FINAL.ps1"
 
@@ -28,7 +28,7 @@ if (Test-Path $RutaLogo) {
 # --- PASO 2: Construir el Contenido Final ---
 $ContenidoFinal = @()
 $ContenidoFinal += "# ========================================================"
-$ContenidoFinal += "# BRIDGEZX v0.5.1 - VERSION FINAL COMPILADA"
+$ContenidoFinal += "# BRIDGEZX v0.5.3 - VERSION FINAL COMPILADA"
 $ContenidoFinal += "# Generado: $(Get-Date)"
 $ContenidoFinal += "# ========================================================"
 $ContenidoFinal += ""
@@ -112,4 +112,3 @@ if ($errors.Count -gt 0) {
 }
 
 Write-Host "Hecho! Archivo creado: $Salida" -ForegroundColor Cyan
-

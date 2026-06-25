@@ -451,24 +451,6 @@ font_exceptions:
     db 45, 0, #44  ; 'M' scanline 0
     db 46, 6, #64  ; 'N' scanline 6
     db 55, 6, #44  ; 'W' scanline 6
-    ; '[' shifted 2px left: ###..... / ##......
-    db 59, 0, #E0  ; '[' scanline 0
-    db 59, 1, #C0  ; '[' scanline 1
-    db 59, 2, #C0  ; '[' scanline 2
-    db 59, 3, #C0  ; '[' scanline 3
-    db 59, 4, #C0  ; '[' scanline 4
-    db 59, 5, #C0  ; '[' scanline 5
-    db 59, 6, #C0  ; '[' scanline 6
-    db 59, 7, #E0  ; '[' scanline 7
-    ; ']' shifted 3px right: .....### / ......##
-    db 61, 0, #07  ; ']' scanline 0
-    db 61, 1, #03  ; ']' scanline 1
-    db 61, 2, #03  ; ']' scanline 2
-    db 61, 3, #03  ; ']' scanline 3
-    db 61, 4, #03  ; ']' scanline 4
-    db 61, 5, #03  ; ']' scanline 5
-    db 61, 6, #03  ; ']' scanline 6
-    db 61, 7, #07  ; ']' scanline 7
     db 63, 7, #7E  ; '_' scanline 7
     db 74, 7, #70  ; 'j' scanline 7
     db 77, 2, #68  ; 'm' scanline 2

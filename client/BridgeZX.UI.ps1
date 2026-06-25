@@ -1,4 +1,4 @@
-# 6. INTERFAZ GRÁFICA (BridgeZX v0.5.1 - Dark Theme)
+# 6. INTERFAZ GRÁFICA (BridgeZX v0.5.3 - Dark Theme)
 # ==========================================
 
 # --- PALETA DE COLORES ---

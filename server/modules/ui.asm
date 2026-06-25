@@ -312,7 +312,6 @@ MaybeUpdateTransferInfo:
 .muti_update:
     pop hl
     ld (last_info_ticks), hl
-    call UpdateProgressBar
     jr UpdateTransferInfo
 .muti_skip:
     pop hl

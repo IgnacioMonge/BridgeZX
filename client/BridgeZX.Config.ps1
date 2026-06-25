@@ -37,7 +37,7 @@ $cfg = [pscustomobject]@{
 }
 
 # Constantes derivadas (AHORA GLOBALES)
-$global:APP_VERSION = "0.5.2"
+$global:APP_VERSION = "0.5.3"
 $global:LAIN_PORT = $cfg.LAIN_PORT
 $global:CHUNK_SIZE = $cfg.CHUNK_SIZE
 $global:MAX_BYTES_PER_TICK = if ($cfg.DESIRED_SEND_RATE_KBPS -gt 0) {
@@ -107,4 +107,3 @@ function Save-IpToHistory {
 }
 
 # ==========================================
-

@@ -1,5 +1,14 @@
 # BridgeZX Client Changelog
 
+## v0.5.3 (2026-06-25)
+
+### Server
+- Reduced the DOT command from 6939 to 6380 bytes by switching CRC-16 to a compact bitwise updater, removing invisible bracket font exceptions, and trimming redundant transfer info refresh work.
+- Preserved the existing transfer protocol, ACK/CRC order, and progress display behavior.
+
+### Client
+- Bumped the Windows client release version to 0.5.3 and regenerated release artifacts.
+
 ## v0.5.1 (2026-04-15)
 
 ### Performance
